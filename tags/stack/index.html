@@ -17,7 +17,7 @@
   
   <meta property="og:type" content="website">
 <meta property="og:title" content="Darry&#39;s Blog">
-<meta property="og:url" content="http://example.com/tags/heap/index.html">
+<meta property="og:url" content="http://example.com/tags/stack/index.html">
 <meta property="og:site_name" content="Darry&#39;s Blog">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="http://example.com/null">
@@ -140,7 +140,7 @@
                 <div class="kratos-entry-border-new clearfix">
                     
                     <div class="kratos-entry-thumb-new">
-                        <a href="/2021/05/30/2021-5-30/">
+                        <a href="/2021/06/06/2021-6-6/">
                             
                                 <img class="kratos-entry-thumb-new-img">
                             
@@ -148,21 +148,16 @@
                     </div>
                     <div class="kratos-post-inner-new">
                         <header class="kratos-entry-header-new">
-                                <a class="label-link" href="/categories/heap/">heap</a>
-                            <h2 class="kratos-entry-title-new"><a href="/2021/05/30/2021-5-30/">2021_BUUCTF&DASCTF_pwn</a>
+                                <a class="label-link" href="/categories/stack/">stack</a>
+                            <h2 class="kratos-entry-title-new"><a href="/2021/06/06/2021-6-6/">2021_蓝帽杯半决赛pwn</a>
                         </header>
                         <div class="kratos-entry-content-new">
                             <p>
                                 
-                                    PWN：pwnpwn.zip
-运行环境为ubuntu18.04，libc-2.27
-题目分析不用想保护全开，经典菜单题
+                                    hangmanhangman.zip
+题目分析
 
-
-
-
-
-菜单有malloc、free、edit、show功能，有一个offbyone漏洞，可以尝试三明治攻击构造...
+题目逻辑大概是先输入一段字符串，生成一段等大小的‘*’（用局部变量v12存放），然后会让你输入一个字符，判断字符是否存在字符串中，如果是则统计该字符个数（当所有字符个数等于原字符串长度...
                                 
                             </p>
                         </div>
@@ -171,12 +166,12 @@
                         <span class="pull-left">
                             <a>
                                 <i class="fa fa-calendar"></i>
-                                2021-05-30
+                                2021-06-06
                             </a>
                             <a>
                                 
                                     <i class="fa fa-tags"></i>
-                                    <a class="tag-none-link" href="/tags/heap/" rel="tag">heap</a>, <a class="tag-none-link" href="/tags/pwn/" rel="tag">pwn</a>, <a class="tag-none-link" href="/tags/writeup/" rel="tag">writeup</a>
+                                    <a class="tag-none-link" href="/tags/pwn/" rel="tag">pwn</a>, <a class="tag-none-link" href="/tags/stack/" rel="tag">stack</a>, <a class="tag-none-link" href="/tags/writeup/" rel="tag">writeup</a>
                                 
                             </a>
                             
@@ -189,63 +184,7 @@
                             
                         </span>
                         <span class="pull-right">
-                            <a class="read-more" href="/2021/05/30/2021-5-30/" title="阅读全文">阅读全文<i class="fa fa-chevron-circle-right"></i></a>
-                        </span>
-                    </footer>
-                </div>
-            </article>
-        
-    
-        
-        
-            <article class="kratos-hentry clearfix">
-                <div class="kratos-entry-border-new clearfix">
-                    
-                    <div class="kratos-entry-thumb-new">
-                        <a href="/2021/05/27/2021-5-27/">
-                            
-                                <img class="kratos-entry-thumb-new-img">
-                            
-                        </a>
-                    </div>
-                    <div class="kratos-post-inner-new">
-                        <header class="kratos-entry-header-new">
-                                <a class="label-link" href="/categories/heap/">heap</a>
-                            <h2 class="kratos-entry-title-new"><a href="/2021/05/27/2021-5-27/">2021_360CTF_pwn</a>
-                        </header>
-                        <div class="kratos-entry-content-new">
-                            <p>
-                                
-                                    PWN：lonelysolf题目涉及知识点lonelywolf.zip
-先讲讲本次题目所涉及的知识点（我一开始的知识盲区）：tcache_perthread_struct结构体，先看看源代码的样子
-123456typedef stru...
-                                
-                            </p>
-                        </div>
-                    </div>
-                    <footer class="kratos-post-meta-new">
-                        <span class="pull-left">
-                            <a>
-                                <i class="fa fa-calendar"></i>
-                                2021-05-27
-                            </a>
-                            <a>
-                                
-                                    <i class="fa fa-tags"></i>
-                                    <a class="tag-none-link" href="/tags/heap/" rel="tag">heap</a>, <a class="tag-none-link" href="/tags/pwn/" rel="tag">pwn</a>, <a class="tag-none-link" href="/tags/writeup/" rel="tag">writeup</a>
-                                
-                            </a>
-                            
-                                <!-- 当前仅支持valine/waline自带的统计功能 -->
-                                
-                            
-                            
-                                <!-- 当前仅支持waline自带的统计功能 -->
-                                
-                            
-                        </span>
-                        <span class="pull-right">
-                            <a class="read-more" href="/2021/05/27/2021-5-27/" title="阅读全文">阅读全文<i class="fa fa-chevron-circle-right"></i></a>
+                            <a class="read-more" href="/2021/06/06/2021-6-6/" title="阅读全文">阅读全文<i class="fa fa-chevron-circle-right"></i></a>
                         </span>
                     </footer>
                 </div>
