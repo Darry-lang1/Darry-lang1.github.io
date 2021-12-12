@@ -24,7 +24,7 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="http://example.com/images/site_logo.ico">
 <meta property="article:published_time" content="2021-12-12T07:33:27.000Z">
-<meta property="article:modified_time" content="2021-12-12T07:36:11.863Z">
+<meta property="article:modified_time" content="2021-12-12T07:46:50.698Z">
 <meta property="article:author" content="Darry想学二进制">
 <meta property="article:tag" content="heap">
 <meta property="article:tag" content="pwn">
@@ -164,7 +164,7 @@
             </header>
             <div class="kratos-post-content">
                 <div id="expire-alert" class="alert alert-warning hidden" role="alert">
-                    本文最后编辑于 <time datetime="1639294571863"></time> 前，其中的内容可能需要更新。
+                    本文最后编辑于 <time datetime="1639295210698"></time> 前，其中的内容可能需要更新。
                 </div>
                 
                     <div class="kratos-post-inner-toc">
@@ -187,7 +187,8 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">bitmask[offset] --&gt; 0xf000028c0200130e</span><br><span class="line">bucket --&gt; 0x83</span><br><span class="line">hasharr --&gt; 0x7c967e3e7c93f2a0</span><br><span class="line">(hasharr + 8) --&gt; 0x0f663356a36b4f2b</span><br></pre></td></tr></table></figure>
 
 <p>不同环境可能会有一些不一样,我的环境是<code>Ubuntu 18.04(Ubuntu GLIBC 2.27-3ubuntu1.4)</code>，这些值可以通过调试获得。</p>
-<h2 id="题目分析"><a href="#题目分析" class="headerlink" title="题目分析"></a>题目分析</h2><p>菜单题目，有编辑、申请、删除功能，还有一个功能就是修改堆块size。申请的堆块大小最小是<code>0x100000</code>也就是mapped范围，而且只能申请两个chunk。</p>
+<h2 id="题目分析"><a href="#题目分析" class="headerlink" title="题目分析"></a>题目分析</h2><p><a href="/download/%E6%B9%96%E6%B9%98%E6%97%85%E6%B8%B8%E6%97%A5%E8%AE%B0%E4%B9%8Bhouse-of-muney/pwnme.zip">题目附件</a></p>
+<p>菜单题目，有编辑、申请、删除功能，还有一个功能就是修改堆块size。申请的堆块大小最小是<code>0x100000</code>也就是mapped范围，而且只能申请两个chunk。</p>
 <p><img src="/2021/12/12/%E6%B9%96%E6%B9%98%E6%97%85%E6%B8%B8%E6%97%A5%E8%AE%B0%E4%B9%8Bhouse-of-muney/image-20211212113040478.png" alt="image-20211212113040478"></p>
 <h2 id="思路"><a href="#思路" class="headerlink" title="思路"></a>思路</h2><p>申请两个mapped范围的，然后修改size，使其覆盖<code>.gnu.hash</code>和<code>.dynsym</code>，而且范围确保不会影响到<code>.dynstr</code>。然后将其释放再申请出来（要申请比原来要大的chunk），这是因为<code>M_MMAP_THRESHOLD</code>会随着<code>munmap/free</code>操作发生增长，若分配的大小小于<code>M_MMAP_THRESHOLD</code>，堆操作将回到常规堆空间进行（大佬博客里摘的）。然后通过编辑堆块修改对应的值。通过exit（将被解析成one_gadgets）来拿shell。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">bitmask[offset] --&gt; 0xf000028c0200130e</span><br><span class="line">bucket --&gt; 0x83</span><br><span class="line">hasharr --&gt; 0x7c967e3e7c93f2a0</span><br><span class="line">(hasharr + 8) --&gt; 0x0f663356a36b4f2b</span><br><span class="line">sym-&gt;st_value --&gt; one_gadgets   (exit&#x27;s Elf64_Sym)</span><br></pre></td></tr></table></figure>
